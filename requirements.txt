@@ -1,0 +1,6 @@
+Flask
+Flask-Cors
+google-cloud-logging
+google-cloud-bigquery
+google-auth
+python-dotenv
