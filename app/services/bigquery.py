@@ -22,9 +22,9 @@ def update_attack_count():
     global attack_count_data
     while True:
         # 하나의 쿼리로 모든 label 값을 집계
-        query = """
+        query = f"""
         SELECT jsonPayload.label, COUNT(*) AS log_count
-        FROM `yesican-443010.attack_log.can_ids`
+        FROM `{Config.GOOGLE_PROJECT}.{Config.ATTACK_BIGQUERY}.can_ids`
         WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
         GROUP BY jsonPayload.label
         """
@@ -64,7 +64,7 @@ def get_daily_attack_count():
         EXTRACT(HOUR FROM timestamp) AS hour,
         COUNT(*) AS attack_count
     FROM
-        `yesican-443010.attack_log.can_ids`
+        `{Config.GOOGLE_PROJECT}.{Config.ATTACK_BIGQUERY}.can_ids`
     WHERE
         timestamp >= '{current_time}'
         AND timestamp <= TIMESTAMP_ADD('{current_time}', INTERVAL 24 HOUR)
@@ -79,7 +79,7 @@ def get_daily_attack_count():
         EXTRACT(HOUR FROM timestamp) AS hour,
         COUNT(*) AS attack_count
     FROM
-        `yesican-443010.normal_log.can_ids`
+        `{Config.GOOGLE_PROJECT}.{Config.NOMRAL_BIGQUERY}.can_ids`
     WHERE
         timestamp >= '{current_time}'
         AND timestamp <= TIMESTAMP_ADD('{current_time}', INTERVAL 24 HOUR)
@@ -113,3 +113,44 @@ def get_daily_attack_count():
     normal_counts_by_hour = {hour: hourly_normal_counts.get(hour, 0) for hour in range(24)}
 
     return {'daily_attack_count': attack_counts_by_hour, 'daily_normal_count': normal_counts_by_hour}
+
+
+def get_overall_risk():
+    
+    current_time = datetime.today() - timedelta(days=1)
+    current_time = current_time.strftime("%Y-%m-%dT15:00:00Z")
+
+        # Define the BigQuery SQL query
+    attack_query = f"""
+    SELECT
+        COUNT(*) AS attack_count
+    FROM
+        `{Config.GOOGLE_PROJECT}.{Config.ATTACK_BIGQUERY}.can_ids`
+    WHERE
+        timestamp >= '{current_time}'
+        AND timestamp <= TIMESTAMP_ADD('{current_time}', INTERVAL 24 HOUR)
+    """
+
+    normal_query = f"""
+    SELECT
+        COUNT(*) AS normal_count
+    FROM
+        `{Config.GOOGLE_PROJECT}.{Config.NOMRAL_BIGQUERY}.can_ids`
+    WHERE
+        timestamp >= '{current_time}'
+        AND timestamp <= TIMESTAMP_ADD('{current_time}', INTERVAL 24 HOUR)
+    """
+
+    # Execute the BigQuery query
+    attack_query_job = bigquery_client.query(attack_query)
+    normal_query_job = bigquery_client.query(normal_query)
+
+    # 결과 가져오기
+    attack_result = attack_query_job.result()
+    normal_result = normal_query_job.result()
+
+    # attack_count와 normal_count 추출
+    attack_count = next(attack_result).attack_count
+    normal_count = next(normal_result).normal_count
+
+    return {'overall_risk': attack_count / normal_count} if (normal_count > 0) else {'overall_risk': 0}
