@@ -4,7 +4,7 @@ from app.services.logging import fetch_logs, get_filter_logs
 
 logs_bp = Blueprint('logs', __name__)
 
-@logs_bp.route('/')
+@logs_bp.route('/all_logs')
 def stream_logs():
     return Response(fetch_logs(), content_type='text/event-stream')
 

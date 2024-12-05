@@ -14,7 +14,7 @@ def hours_attack_count():
     def generate():
         while True:
             yield f"data: {json.dumps(update_attack_count())}\n\n"
-            time.sleep(1)
+            time.sleep(60)  # 60초 간격으로 데이터 전송
 
     return Response(generate(), content_type='text/event-stream')
 

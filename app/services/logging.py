@@ -54,7 +54,7 @@ def fetch_logs():
 
 def get_filter_logs(attack_type, can_id, start_date, end_date):
     
-    print(start_date, end_date)
+    # print(start_date, end_date)
 
     start_date = datetime.strptime(start_date.split('.')[0], "%Y-%m-%dT%H:%M:%S")
     end_date = datetime.strptime(end_date.split('.')[0], "%Y-%m-%dT%H:%M:%S")
@@ -63,7 +63,7 @@ def get_filter_logs(attack_type, can_id, start_date, end_date):
     end_date = end_date.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-    print(attack_type, can_id, start_date, end_date)
+    # print(attack_type, can_id, start_date, end_date)
 
     filter_str = 'resource.type="global"'
     if attack_type:

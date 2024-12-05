@@ -9,46 +9,42 @@ from collections import defaultdict
 bigquery_credentials = service_account.Credentials.from_service_account_file(Config.GOOGLE_APPLICATION_CREDENTIALS_BQ)
 bigquery_client = bigquery.Client(credentials=bigquery_credentials, project=Config.GOOGLE_PROJECT)
 
-attack_count_data = {
-    "DoS": 0,
-    "Fuzzing": 0,
-    "Replay": 0,
-    "Suspension": 0,
-    "Masquerade": 0
-}
-
-# Background thread for periodically fetching the attack count from BigQuery
 def update_attack_count():
-    global attack_count_data
-    while True:
-        # 하나의 쿼리로 모든 label 값을 집계
-        query = f"""
-        SELECT jsonPayload.label, COUNT(*) AS log_count
-        FROM `{Config.GOOGLE_PROJECT}.{Config.ATTACK_BIGQUERY}.can_ids`
-        WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
-        GROUP BY jsonPayload.label
-        """
+    attack_count_data = {
+        "DoS": 0,
+        "Fuzzing": 0,
+        "Replay": 0,
+        "Suspension": 0,
+        "Masquerade": 0
+    }
 
-        query_job = bigquery_client.query(query)
+    # 하나의 쿼리로 모든 label 값을 집계
+    query = f"""
+    SELECT jsonPayload.label, COUNT(*) AS log_count
+    FROM `{Config.GOOGLE_PROJECT}.{Config.ATTACK_BIGQUERY}.can_ids`
+    WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR)
+    GROUP BY jsonPayload.label
+    """
 
-        # 쿼리 결과를 읽어와서 attack_count_data 업데이트
-        for row in query_job.result():
-            label = row.label
-            log_count = row.log_count
-            
-            if label == 1:
-                attack_count_data["DoS"] = log_count
-            elif label == 2:
-                attack_count_data["Fuzzing"] = log_count
-            elif label == 3:
-                attack_count_data["Replay"] = log_count
-            elif label == 4:
-                attack_count_data["Suspension"] = log_count
-            elif label == 5:
-                attack_count_data["Masquerade"] = log_count
+    query_job = bigquery_client.query(query)
 
-        time.sleep(60)  # Update every 60 seconds
+    # 쿼리 결과를 읽어와서 attack_count_data 업데이트
+    for row in query_job.result():
+        label = row.label
+        log_count = row.log_count
+        
+        if label == 1:
+            attack_count_data["DoS"] = log_count
+        elif label == 2:
+            attack_count_data["Fuzzing"] = log_count
+        elif label == 3:
+            attack_count_data["Replay"] = log_count
+        elif label == 4:
+            attack_count_data["Suspension"] = log_count
+        elif label == 5:
+            attack_count_data["Masquerade"] = log_count
 
+    return attack_count_data
 
 
 def get_daily_attack_count():
@@ -56,7 +52,7 @@ def get_daily_attack_count():
     current_time = datetime.today() - timedelta(days=1)
     current_time = current_time.strftime("%Y-%m-%dT15:00:00Z")
 
-    print(current_time)
+    # print(current_time)
 
     # Define the BigQuery SQL query
     attack_query = f"""
@@ -153,4 +149,12 @@ def get_overall_risk():
     attack_count = next(attack_result).attack_count
     normal_count = next(normal_result).normal_count
 
-    return {'overall_risk': attack_count / normal_count} if (normal_count > 0) else {'overall_risk': 0}
+    # 전체 트래픽 대비 공격 비율 계산
+    total_count = attack_count + normal_count
+    if total_count > 0:
+        overall_risk = (attack_count / total_count) * 100
+        overall_risk = round(overall_risk, 2)  # 소수점 2자리로 반올림
+    else:
+        overall_risk = 0
+
+    return {'overall_risk': overall_risk}  # 백분율 형식으로 반환
