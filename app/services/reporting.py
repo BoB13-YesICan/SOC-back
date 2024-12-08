@@ -2,16 +2,23 @@ from google.cloud import logging_v2
 from google.oauth2 import service_account
 from config import Config
 import pandas as pd
+from datetime import datetime
 from ..report.log_parse_info import ids  # 공격 유형 정보 가져오기
 
 log_credentials = service_account.Credentials.from_service_account_file(Config.GOOGLE_APPLICATION_CREDENTIALS_LOG)
 log_client = logging_v2.Client(credentials=log_credentials, project=Config.GOOGLE_PROJECT)
 
 # 로그 필터링 함수
-def get_report_logs(start_time, end_time):
-    filter_str = f'resource.type="global" AND timestamp>="{start_time}" AND timestamp<="{end_time}"'
+def get_report_logs(start_date, end_date):
+    start_date = datetime.strptime(start_date.split('.')[0], "%Y-%m-%dT%H:%M:%S")
+    end_date = datetime.strptime(end_date.split('.')[0], "%Y-%m-%dT%H:%M:%S")
+
+    start_date = start_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+    end_date = end_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    filter_str = f'resource.type="global" AND timestamp>="{start_date}" AND timestamp<="{end_date}"'
     entries = list(log_client.list_entries(filter_=filter_str))
-    filtered_logs = []
+    report_logs = []
 
     if entries:
         for entry in entries:
@@ -33,11 +40,11 @@ def get_report_logs(start_time, end_time):
                     'clock_skew_min': payload.get('clock_skew_min', 'N/A'),
                     'clock_skew_max': payload.get('clock_skew_max', 'N/A'),
                 }
-                filtered_logs.append(log_entry)
+                report_logs.append(log_entry)
             except Exception as e:
                 print(f"Error processing entry: {e}")
 
-    return pd.DataFrame(filtered_logs)
+    return pd.DataFrame(report_logs)
 
 # CAN 기본 정보 처리
 def process_can_info(df):

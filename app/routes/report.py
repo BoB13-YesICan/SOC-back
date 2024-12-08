@@ -10,11 +10,11 @@ report_bp = Blueprint('report', __name__)
 def generate_report_endpoint():
     try:
         # 요청에서 시간 범위 가져오기
-        start_time = request.args.get("start_date")
-        end_time = request.args.get("end_date")
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
 
         # 로그 필터링 및 데이터 처리
-        df = get_report_logs(start_time, end_time)
+        df = get_report_logs(start_date, end_date)
         df["periodic"] = df["periodic"].astype(str).str.strip()
         df["periodic"] = df["periodic"].replace(["0.0", 0.0], "미측정").replace(["-1.0", -1], "비주기")
 
