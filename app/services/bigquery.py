@@ -32,16 +32,16 @@ def update_attack_count():
     for row in query_job.result():
         label = row.label
         log_count = row.log_count
-        
-        if label == 1:
-            attack_count_data["DoS"] = log_count
-        elif label == 2:
-            attack_count_data["Fuzzing"] = log_count
-        elif label == 3:
+
+        if label in [1, 2, 3]:
+            attack_count_data["DoS"] += log_count
+        elif label in [4, 5]:
+            attack_count_data["Fuzzing"] += log_count
+        elif label == 6:
             attack_count_data["Replay"] = log_count
-        elif label == 4:
-            attack_count_data["Suspension"] = log_count
-        elif label == 5:
+        elif label in [7, 8]:
+            attack_count_data["Suspension"] += log_count
+        elif label == 9:
             attack_count_data["Masquerade"] = log_count
 
     return attack_count_data

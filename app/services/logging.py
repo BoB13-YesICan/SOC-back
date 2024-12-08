@@ -67,7 +67,16 @@ def get_filter_logs(attack_type, can_id, start_date, end_date):
 
     filter_str = 'resource.type="global"'
     if attack_type:
-        filter_str += f' AND jsonPayload.label="{attack_type}"'
+        if attack_type == 1:  # DoS includes labels 1, 2, and 3
+            filter_str += ' AND (jsonPayload.label="1" OR jsonPayload.label="2" OR jsonPayload.label="3")'
+        elif attack_type == 2:  # Fuzzing includes labels 4 and 5
+            filter_str += ' AND (jsonPayload.label="4" OR jsonPayload.label="5")'
+        elif attack_type == 3:  # Replay includes label 6
+            filter_str += ' AND jsonPayload.label="6"'
+        elif attack_type == 4:  # Suspension includes labels 7 and 8
+            filter_str += ' AND (jsonPayload.label="7" OR jsonPayload.label="8")'
+        elif attack_type == 5:  # Masquerade includes label 9
+            filter_str += ' AND jsonPayload.label="9"'
     if can_id:
         filter_str += f' AND jsonPayload.can_id="{can_id}"'
     if start_date and end_date:
