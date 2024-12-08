@@ -10,8 +10,10 @@ def create_app():
     # 블루프린트 등록
     from app.routes.logs import logs_bp
     from app.routes.stats import stats_bp
+    from app.routes.report import report_bp
     
     app.register_blueprint(logs_bp, url_prefix='/api/logs')
     app.register_blueprint(stats_bp, url_prefix='/api/stats')
+    app.register_blueprint(report_bp, url_prefix='/api/report')
 
     return app

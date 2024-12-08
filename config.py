@@ -12,6 +12,8 @@ class Config:
     ATTACK_BIGQUERY = os.getenv("ATTACK_BIGQUERY")
     NOMRAL_BIGQUERY = os.getenv("NORMAL_BIGQUERY")
 
+    REPORT_HTML_FILTEPATH = os.getenv("REPORT_HTML_FILTEPATH")
+    REPORT_PDF_FILEPATH = os.getenv("REPORT_PDF_FILEPATH")
 
     # Flask 환경 설정
     FLASK_ENV = os.getenv("FLASK_ENV", "production")
