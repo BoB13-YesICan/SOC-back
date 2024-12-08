@@ -86,6 +86,7 @@ def get_filter_logs(attack_type, can_id, start_date, end_date):
     filtered_logs = {
         'can_id': 'N/A',
         'periodic': 'N/A',
+        'is_DBC':'N/A',
         'clock_skew_min': 'N/A',
         'clock_skew_max': 'N/A',
         'logs': []
@@ -97,10 +98,12 @@ def get_filter_logs(attack_type, can_id, start_date, end_date):
             filtered_logs = {
                 'can_id': payload.get('can_id', 'N/A'),
                 'periodic': payload.get('periodic', 'N/A'),
+                'is_DBC': payload.get('is_dbc_available', 'N/A'),
                 'clock_skew_min': payload.get('clock_skew_min', 'N/A'),
                 'clock_skew_max': payload.get('clock_skew_max', 'N/A'),
                 'logs': []
             }
+            
             for entry in entries:
                 try:
                     payload = entry.payload
@@ -109,7 +112,8 @@ def get_filter_logs(attack_type, can_id, start_date, end_date):
                         'payload': payload.get('payload', 'N/A'),
                         'timediff': payload.get('time_diff', 'N/A'),
                         'similarity': payload.get('similarity', 'N/A'),
-                        'clock_skew': payload.get('clock_skew', 'N/A'),
+                        'reset_count': payload.get('reset_count', 'N/A'),
+                        'clock_skew': payload.get('clock_skew', 'N/A')
                     }
                     filtered_logs['logs'].append(log_entry)
                 except Exception as e:
